@@ -23,6 +23,10 @@ RenderWidget::RenderWidget(const QGLFormat &format)
 
   : QGLWidget(format, (QWidget*) 0)
 
+  , tex(0)
+  , curSize(-1, -1)
+  , texSize(-1, -1)
+
   , rotating(false)
   , scaling(false)
   , translating(false)
@@ -49,7 +53,6 @@ void RenderWidget::compileShaders()
        FragmentShader(version, {shaders::quad}));
 }
 
-
 void RenderWidget::initializeGL()
 {
    std::cout << "OpenGL version: " << glGetString(GL_VERSION)
@@ -72,9 +75,7 @@ void RenderWidget::initializeGL()
                 0, GL_RGBA, GL_FLOAT, coefGrid);
 
    delete [] coefGrid;
-
-   glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-   glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);*/
+*/
 
    glGenVertexArrays(1, &vao); // create an empty VAO
 
@@ -90,50 +91,49 @@ void RenderWidget::resizeGL(int width, int height)
    aspect = (double) width / height;
 }
 
-/*void RenderWidget::shapeInit(const Program &prog)
+void RenderWidget::createTexture(QSize size)
 {
-   int p1 = polyOrder+1;
-   double weights[p1];
-   float fnodes[p1], fweights[p1];
+   //std::cout << "Creating " << size.width() << "x" << size.height() << " texture.\n";
 
-   for (int i = 0; i <= polyOrder; i++)
-   {
-      weights[i] = 1.0;
-   }
-   for (int i = 0; i <= polyOrder; i++)
-   {
-      for (int j = 0; j < i; j++)
-      {
-         double xij = nodes[i] - nodes[j];
-         weights[i] *=  xij;
-         weights[j] *= -xij;
-      }
-   }
-   for (int i = 0; i <= polyOrder; i++)
-   {
-      fnodes[i] = nodes[i];
-      fweights[i] = 1.0 / weights[i];
+   if (tex) {
+      glDeleteTextures(1, &tex);
    }
 
-   glUniform1fv(prog.uniform("lagrangeNodes"), p1, fnodes);
-   glUniform1fv(prog.uniform("lagrangeWeights"), p1, fweights);
-}*/
+   glGenTextures(1, &tex);
+   glBindTexture(GL_TEXTURE_2D, tex);
+
+   //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+   //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+   int nfloats = size.width() * size.height() * 4;
+   float* data = new float[nfloats];
+   for (int i = 0; i < nfloats; i++) {
+      data[i] = double(rand()) / RAND_MAX ;
+   }
+
+   // same internal format as compute shader input
+   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, size.width(), size.height(),
+                0, GL_RGBA, GL_FLOAT, data);
+
+   delete [] data;
+
+   // bind to image unit so can write to specific pixels from the shader
+   //glBindImageTexture(0, tex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+}
 
 void RenderWidget::paintGL()
 {
+   if (curSize != texSize) {
+      createTexture(curSize);
+      texSize = curSize;
+   }
+
    glClearColor(1, 1, .5, 1);
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
-
-/*   glm::mat4 projection = glm::perspective(45.0, aspect, 0.001, 100.0);
-
-   glm::mat4 modelView(1.0);
-   modelView = glm::translate(modelView, glm::vec3(PanSpeed*panX, -PanSpeed*panY, -3));
-   double s = std::pow(1.01, -scale);
-   modelView = glm::scale(modelView, glm::vec3(s, s, s));
-   //modelView = glm::translate(modelView, glm::vec3(-0.5, -0.5, -0.5));
-
-   glm::mat4 MVP = projection * modelView;*/
 
    progQuad.use();
 
@@ -143,17 +143,12 @@ void RenderWidget::paintGL()
    glUniform2f(progSurface.uniform("screenSize"),
                curSize.width(), curSize.height());
 
-   glUniform1i(progSurface.uniform("sampler"), 0);
-   glActiveTexture(GL_TEXTURE0);
-   glBindTexture(GL_TEXTURE_RECTANGLE, tex);
-
    glUniform1i(progSurface.uniform("elemPack"), elemPack);
-   glUniform1i(progSurface.uniform("elemMask"), (1 << elemPack) - 1);
+   glUniform1i(progSurface.uniform("elemMask"), (1 << elemPack) - 1);*/
 
-   glUniform3fv(progSurface.uniform("palette"),
-                RGB_Palette_3_Size, (const float*) RGB_Palette_3);
-
-   shapeInit(progSurface);*/
+   glUniform1i(progQuad.uniform("sampler"), 0);
+   glActiveTexture(GL_TEXTURE0);
+   glBindTexture(GL_TEXTURE_2D, tex);
 
    glBindVertexArray(vao);
    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);

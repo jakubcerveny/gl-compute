@@ -29,6 +29,7 @@ protected:
 
    void compileShaders();
    //void shapeInit(const Program &prog);
+   void createTexture(QSize size);
 
    virtual void initializeGL();
    virtual void resizeGL(int width, int height);
@@ -39,7 +40,7 @@ protected:
    virtual void wheelEvent(QWheelEvent *event);
    virtual void keyPressEvent(QKeyEvent * event);
 
-   QSize curSize;
+   QSize curSize, texSize;
    double aspect;
    QPoint lastPos;
 
