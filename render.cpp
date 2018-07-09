@@ -123,7 +123,16 @@ void RenderWidget::paintGL()
    glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
 
    progCompute.use();
-   glDispatchCompute(texSize.width(), texSize.height(), 1);
+
+   int lsize[3];
+   progCompute.computeLocalSize(lsize);
+
+   int ngroups[3];
+   ngroups[0] = (texSize.width() + lsize[0]-1) / lsize[0];
+   ngroups[1] = (texSize.height() + lsize[1]-1) / lsize[1];
+   ngroups[2] = 1;
+
+   glDispatchCompute(ngroups[0], ngroups[1], ngroups[2]);
 
    // prevent sampling befor all writes to image are done
    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);

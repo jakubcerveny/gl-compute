@@ -371,6 +371,10 @@ public:
       return glGetAttribLocation(get(), name.c_str());
    }
 
+   void computeLocalSize(GLint lsize[3]) {
+      glGetProgramiv(get(), GL_COMPUTE_WORK_GROUP_SIZE, lsize);
+   }
+
 private:
 
    static void deleter(const GLuint *p) {

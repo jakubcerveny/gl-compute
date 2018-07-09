@@ -1,6 +1,6 @@
 #line 2
 
-layout (local_size_x = 16, local_size_y = 16) in;
+layout (local_size_x = 4, local_size_y = 4) in;
 
 layout (rgba32f, binding = 0) uniform image2D img_out;
 
