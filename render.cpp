@@ -14,6 +14,7 @@
 //#include "palette.hpp"
 
 #include "shaders/quad.glsl.hpp"
+#include "shaders/compute.glsl.hpp"
 
 const double PanSpeed = 0.005;
 const double RotateSpeed = 0.4;
@@ -51,6 +52,10 @@ void RenderWidget::compileShaders()
    progQuad.link(
        VertexShader(version, {shaders::quad}),
        FragmentShader(version, {shaders::quad}));
+
+   progCompute.link(
+       ComputeShader(version, {shaders::compute}));
+
 }
 
 void RenderWidget::initializeGL()
@@ -69,14 +74,6 @@ void RenderWidget::initializeGL()
 
    compileShaders();
 
-/*   glGenTextures(1, &tex);
-   glBindTexture(GL_TEXTURE_RECTANGLE, tex);
-   glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA32F, width, height,
-                0, GL_RGBA, GL_FLOAT, coefGrid);
-
-   delete [] coefGrid;
-*/
-
    glGenVertexArrays(1, &vao); // create an empty VAO
 
    //glEnable(GL_DEPTH_TEST);
@@ -93,8 +90,6 @@ void RenderWidget::resizeGL(int width, int height)
 
 void RenderWidget::createTexture(QSize size)
 {
-   //std::cout << "Creating " << size.width() << "x" << size.height() << " texture.\n";
-
    if (tex) {
       glDeleteTextures(1, &tex);
    }
@@ -108,20 +103,12 @@ void RenderWidget::createTexture(QSize size)
    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-   int nfloats = size.width() * size.height() * 4;
-   float* data = new float[nfloats];
-   for (int i = 0; i < nfloats; i++) {
-      data[i] = double(rand()) / RAND_MAX ;
-   }
-
    // same internal format as compute shader input
    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, size.width(), size.height(),
-                0, GL_RGBA, GL_FLOAT, data);
-
-   delete [] data;
+                0, GL_RGBA, GL_FLOAT, NULL);
 
    // bind to image unit so can write to specific pixels from the shader
-   //glBindImageTexture(0, tex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+   glBindImageTexture(0, tex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 }
 
 void RenderWidget::paintGL()
@@ -135,12 +122,15 @@ void RenderWidget::paintGL()
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
 
+   progCompute.use();
+   glDispatchCompute(texSize.width(), texSize.height(), 1);
+
+   // prevent sampling befor all writes to image are done
+   glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
    progQuad.use();
 
-   /*glUniformMatrix4fv(progSurface.uniform("MVP"), 1, GL_FALSE,
-                      glm::value_ptr(MVP));
-
-   glUniform2f(progSurface.uniform("screenSize"),
+   /*glUniform2f(progSurface.uniform("screenSize"),
                curSize.width(), curSize.height());
 
    glUniform1i(progSurface.uniform("elemPack"), elemPack);

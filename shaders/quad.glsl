@@ -17,6 +17,7 @@ out vec2 texPos;
 
 void main()
 {
+    // render a fullscreen quad
     gl_Position = vertices[gl_VertexID];
     texPos = texCoords[gl_VertexID];
 }
@@ -30,7 +31,6 @@ uniform sampler2D sampler;
 
 void main()
 {
-    //gl_FragColor = vec4(texPos.x, texPos.y, 0, 1);
     gl_FragColor = texture(sampler, texPos);
 }
 

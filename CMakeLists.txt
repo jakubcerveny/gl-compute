@@ -48,6 +48,7 @@ set(gl-compute_MOC_HEADERS
 qt4_wrap_cpp(gl-compute_MOC_FILES ${gl-compute_MOC_HEADERS})
 
 file_to_cpp(gl-compute_DATA shaders::quad shaders/quad.glsl)
+file_to_cpp(gl-compute_DATA shaders::compute shaders/compute.glsl)
 
 add_executable(gl-compute
     ${gl-compute_SOURCES}
