@@ -26,12 +26,13 @@ void main()
 #elif _FRAGMENT_
 
 in vec2 texPos;
+out vec4 fragColor;
 
 uniform sampler2D sampler;
 
 void main()
 {
-    gl_FragColor = texture(sampler, texPos);
+    fragColor = texture(sampler, texPos);
 }
 
 #endif
