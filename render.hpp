@@ -44,15 +44,8 @@ protected:
    double aspect;
    QPoint lastPos;
 
-   bool rotating;
-   bool scaling;
-   bool translating;
-
-   double rotateX, rotateY;
    double scale;
    double panX, panY;
-
-   bool wireframe;
 };
 
 

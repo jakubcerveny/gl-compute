@@ -17,7 +17,7 @@ out vec2 texPos;
 
 void main()
 {
-    // render a fullscreen quad
+    // render a fullscreen quad, procedurally (the only input is the vertex ID)
     gl_Position = vertices[gl_VertexID];
     texPos = texCoords[gl_VertexID];
 }

@@ -28,15 +28,8 @@ RenderWidget::RenderWidget(const QGLFormat &format)
   , curSize(-1, -1)
   , texSize(-1, -1)
 
-  , rotating(false)
-  , scaling(false)
-  , translating(false)
-
-  , rotateX(0.), rotateY(0.)
   , scale(0.)
   , panX(0.), panY(0.)
-
-  , wireframe(false)
 {
    grabKeyboard();
 }
@@ -83,6 +76,11 @@ void RenderWidget::initializeGL()
 
 void RenderWidget::resizeGL(int width, int height)
 {
+   if (curSize == QSize(-1, -1)) {
+      panX = width * 0.75;
+      panY = height * 0.5;
+      scale = 2.0 / height;
+   }
    glViewport(0, 0, width, height);
    curSize = QSize(width, height);
    aspect = (double) width / height;
@@ -107,8 +105,6 @@ void RenderWidget::createTexture(QSize size)
    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, size.width(), size.height(),
                 0, GL_RGBA, GL_FLOAT, NULL);
 
-   // bind to image unit so can write to specific pixels from the shader
-   glBindImageTexture(0, tex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 }
 
 void RenderWidget::paintGL()
@@ -118,11 +114,12 @@ void RenderWidget::paintGL()
       texSize = curSize;
    }
 
-   glClearColor(1, 1, .5, 1);
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
-
    progCompute.use();
+
+   glUniform2f(progCompute.uniform("center"), panX, panY);
+   glUniform1f(progCompute.uniform("scale"), scale);
+
+   glBindImageTexture(0, tex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
    int lsize[3];
    progCompute.computeLocalSize(lsize);
@@ -134,16 +131,11 @@ void RenderWidget::paintGL()
 
    glDispatchCompute(ngroups[0], ngroups[1], ngroups[2]);
 
-   // prevent sampling befor all writes to image are done
+   // prevent sampling before all writes to image are done
    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
+   // display the output of the compute shader
    progQuad.use();
-
-   /*glUniform2f(progSurface.uniform("screenSize"),
-               curSize.width(), curSize.height());
-
-   glUniform1i(progSurface.uniform("elemPack"), elemPack);
-   glUniform1i(progSurface.uniform("elemMask"), (1 << elemPack) - 1);*/
 
    glUniform1i(progQuad.uniform("sampler"), 0);
    glActiveTexture(GL_TEXTURE0);
@@ -166,19 +158,20 @@ void RenderWidget::mouseMoveEvent(QMouseEvent *event)
     bool leftButton();
     bool rightButton(event->buttons() & Qt::RightButton);
 
-    if (event->buttons() & Qt::LeftButton)
+    if (event->buttons() & Qt::RightButton)
     {
-       rotateX += deltaX;
-       rotateY += deltaY;
+       //double cx = (event->x() + scale*panX) / scale;
+       //double cy = (event->y() + scale*panY) / scale;
+
+       scale *= pow(1.01, double(deltaY) / 10);
+
+       //panX = (cx - scale*event->x()) / scale;
+       //panY = (cy - scale*event->y()) / scale;
     }
-    else if (event->buttons() & Qt::RightButton)
-    {
-       scale += deltaY;
-    }
-    else if (event->buttons() & Qt::MiddleButton)
+    else if (event->buttons() & Qt::LeftButton)
     {
        panX += deltaX;
-       panY += deltaY;
+       panY -= deltaY;
     }
 
     lastPos = event->pos();
@@ -209,10 +202,6 @@ void RenderWidget::keyPressEvent(QKeyEvent * event)
       break;
 
    case Qt::Key_Plus:
-      break;
-
-   case Qt::Key_W:
-      wireframe = !wireframe;
       break;
    }
    updateGL();
