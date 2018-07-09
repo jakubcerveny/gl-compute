@@ -1,3 +1,11 @@
+build/
+
+gl-compute.config
+gl-compute.creator
+gl-compute.creator.user
+gl-compute.files
+gl-compute.includes
+
 # Prerequisites
 *.d
 

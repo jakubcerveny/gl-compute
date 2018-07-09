@@ -13,8 +13,7 @@
 #include "render.hpp"
 //#include "palette.hpp"
 
-//#include "shaders/shape.glsl.hpp"
-//#include "shaders/surface.glsl.hpp"
+#include "shaders/quad.glsl.hpp"
 
 const double PanSpeed = 0.005;
 const double RotateSpeed = 0.4;
@@ -43,22 +42,11 @@ RenderWidget::~RenderWidget()
 
 void RenderWidget::compileShaders()
 {
-   const int version = 400;
+   const int version = 430;
 
-   /*Definitions defs;
-   defs("P", std::to_string(polyOrder))
-       ("PALETTE_SIZE", std::to_string(RGB_Palette_3_Size));*/
-
-   /*ShaderSource::list surface{
-      shaders::shape,
-      shaders::surface
-   };*/
-
-   /*progSurface.link(
-       VertexShader(version, surface, defs),
-       TessControlShader(version, surface, defs),
-       TessEvalShader(version, surface, defs),
-       FragmentShader(version, surface, defs));*/
+   progQuad.link(
+       VertexShader(version, {shaders::quad}),
+       FragmentShader(version, {shaders::quad}));
 }
 
 
@@ -86,9 +74,9 @@ void RenderWidget::initializeGL()
    delete [] coefGrid;
 
    glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-   glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+   glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);*/
 
-   glGenVertexArrays(1, &vao); // create an empty VAO*/
+   glGenVertexArrays(1, &vao); // create an empty VAO
 
    //glEnable(GL_DEPTH_TEST);
    //glEnable(GL_CULL_FACE);
@@ -145,11 +133,11 @@ void RenderWidget::paintGL()
    modelView = glm::scale(modelView, glm::vec3(s, s, s));
    //modelView = glm::translate(modelView, glm::vec3(-0.5, -0.5, -0.5));
 
-   glm::mat4 MVP = projection * modelView;
+   glm::mat4 MVP = projection * modelView;*/
 
-   progSurface.use();
+   progQuad.use();
 
-   glUniformMatrix4fv(progSurface.uniform("MVP"), 1, GL_FALSE,
+   /*glUniformMatrix4fv(progSurface.uniform("MVP"), 1, GL_FALSE,
                       glm::value_ptr(MVP));
 
    glUniform2f(progSurface.uniform("screenSize"),
@@ -165,11 +153,10 @@ void RenderWidget::paintGL()
    glUniform3fv(progSurface.uniform("palette"),
                 RGB_Palette_3_Size, (const float*) RGB_Palette_3);
 
-   shapeInit(progSurface);
+   shapeInit(progSurface);*/
 
    glBindVertexArray(vao);
-   glPatchParameteri(GL_PATCH_VERTICES, 4);
-   glDrawArrays(GL_PATCHES, 0, 4*numElements);*/
+   glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
 void RenderWidget::mousePressEvent(QMouseEvent *event)

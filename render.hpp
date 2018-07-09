@@ -24,7 +24,7 @@ public:
 
 protected:
 
-   Program progSurface;
+   Program progQuad;
    GLuint vao, tex;
 
    void compileShaders();
