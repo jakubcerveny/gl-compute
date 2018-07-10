@@ -40,9 +40,11 @@ protected:
    virtual void wheelEvent(QWheelEvent *event);
    virtual void keyPressEvent(QKeyEvent * event);
 
+   void zoom(double delta);
+
    QSize curSize, texSize;
    double aspect;
-   QPoint lastPos;
+   QPoint lastPos, centerPos;
 
    double scale;
    double panX, panY;

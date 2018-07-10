@@ -68,10 +68,6 @@ void RenderWidget::initializeGL()
    compileShaders();
 
    glGenVertexArrays(1, &vao); // create an empty VAO
-
-   //glEnable(GL_DEPTH_TEST);
-   //glEnable(GL_CULL_FACE);
-   //glEnable(GL_MULTISAMPLE);
 }
 
 void RenderWidget::resizeGL(int width, int height)
@@ -95,13 +91,9 @@ void RenderWidget::createTexture(QSize size)
    glGenTextures(1, &tex);
    glBindTexture(GL_TEXTURE_2D, tex);
 
-   //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-   //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-   // same internal format as compute shader input
    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, size.width(), size.height(),
                 0, GL_RGBA, GL_FLOAT, NULL);
 
@@ -147,41 +139,48 @@ void RenderWidget::paintGL()
 
 void RenderWidget::mousePressEvent(QMouseEvent *event)
 {
-    lastPos = event->pos();
+   lastPos = event->pos();
+   centerPos = QPoint(lastPos.x(), curSize.height() - lastPos.y());
+}
+
+void RenderWidget::zoom(double delta)
+{
+   double cx = scale*(centerPos.x() - panX);
+   double cy = scale*(centerPos.y() - panY);
+
+   scale *= pow(1.01, delta);
+
+   panX = (scale*centerPos.x() - cx) / scale;
+   panY = (scale*centerPos.y() - cy) / scale;
 }
 
 void RenderWidget::mouseMoveEvent(QMouseEvent *event)
 {
-    double deltaX(event->x() - lastPos.x());
-    double deltaY(event->y() - lastPos.y());
+   double deltaX(event->x() - lastPos.x());
+   double deltaY(event->y() - lastPos.y());
 
-    bool leftButton();
-    bool rightButton(event->buttons() & Qt::RightButton);
+   bool leftButton();
+   bool rightButton(event->buttons() & Qt::RightButton);
 
-    if (event->buttons() & Qt::RightButton)
-    {
-       //double cx = (event->x() + scale*panX) / scale;
-       //double cy = (event->y() + scale*panY) / scale;
+   if (event->buttons() & Qt::RightButton)
+   {
+      zoom(deltaY/2);
+   }
+   else if (event->buttons() & Qt::LeftButton)
+   {
+      panX += deltaX;
+      panY -= deltaY;
+   }
 
-       scale *= pow(1.01, double(deltaY) / 10);
-
-       //panX = (cx - scale*event->x()) / scale;
-       //panY = (cy - scale*event->y()) / scale;
-    }
-    else if (event->buttons() & Qt::LeftButton)
-    {
-       panX += deltaX;
-       panY -= deltaY;
-    }
-
-    lastPos = event->pos();
-    updateGL();
+   lastPos = event->pos();
+   updateGL();
 }
 
 void RenderWidget::wheelEvent(QWheelEvent *event)
 {
-//    position(2) *= pow(1.04, (float) -event->delta() / 120);
-    updateGL();
+   centerPos = QPoint(event->x(), curSize.height() - event->y());
+   zoom(-double(event->delta()) / 10);
+   updateGL();
 }
 
 void RenderWidget::keyPressEvent(QKeyEvent * event)
