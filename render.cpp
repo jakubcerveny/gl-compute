@@ -15,6 +15,7 @@
 
 #include "shaders/quad.glsl.hpp"
 #include "shaders/compute.glsl.hpp"
+#include "shaders/palette.glsl.hpp"
 
 const double PanSpeed = 0.005;
 const double RotateSpeed = 0.4;
@@ -47,7 +48,7 @@ void RenderWidget::compileShaders()
        FragmentShader(version, {shaders::quad}));
 
    progCompute.link(
-       ComputeShader(version, {shaders::compute}));
+       ComputeShader(version, {shaders::palette, shaders::compute}));
 
 }
 

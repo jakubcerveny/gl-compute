@@ -6,6 +6,7 @@ layout (rgba32f, binding = 0) uniform image2D img_out;
 uniform vec2 center;
 uniform float scale;
 
+const int max_iter = 1000;
 
 // from https://en.wikipedia.org/wiki/Mandelbrot_set
 int mandelbrot(float x0, float y0)
@@ -14,7 +15,6 @@ int mandelbrot(float x0, float y0)
     float y = 0.0;
 
     int iter = 0;
-    const int max_iter = 1000;
 
     while (x*x + y*y < 2*2 && iter < max_iter)
     {
@@ -33,9 +33,15 @@ void main()
     vec2 pixel_xy = gl_GlobalInvocationID.xy;
     vec2 xy = scale * (pixel_xy - center);
 
-    float value = mandelbrot(xy.x, xy.y) / 1000.0;
+    int value = mandelbrot(xy.x, xy.y);
 
-    vec4 color = vec4(value, value, value, 1.0);
+    //vec4 color = vec4(value, value, value, 1.0);
+
+    vec4 color = vec4(0, 0, 0, 1);
+    if (value < max_iter)
+    {
+        color = vec4(RGB_Palette_3[value % RGB_Palette_3_Size], 1.0);
+    }
 
     /*vec4 color = vec4(float(gl_WorkGroupID.x) / gl_NumWorkGroups.x,
                       float(gl_WorkGroupID.y) / gl_NumWorkGroups.y,
