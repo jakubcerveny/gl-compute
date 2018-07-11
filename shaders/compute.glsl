@@ -6,7 +6,7 @@ layout (rgba32f, binding = 0) uniform image2D img_out;
 uniform vec2 center;
 uniform float scale;
 
-const int max_iter = 1000;
+const int max_iter = 500;
 
 // from https://en.wikipedia.org/wiki/Mandelbrot_set
 int mandelbrot(float x0, float y0)

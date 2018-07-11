@@ -6,12 +6,11 @@
 
 #include <QString>
 
-#include <glm/glm.hpp>
+/*#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/type_ptr.hpp>*/
 
 #include "render.hpp"
-//#include "palette.hpp"
 
 #include "shaders/quad.glsl.hpp"
 #include "shaders/compute.glsl.hpp"
@@ -124,7 +123,7 @@ void RenderWidget::paintGL()
 
    glDispatchCompute(ngroups[0], ngroups[1], ngroups[2]);
 
-   // prevent sampling before all writes to image are done
+   // prevent sampling before all writes to texture are done
    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
    // display the output of the compute shader
@@ -137,6 +136,7 @@ void RenderWidget::paintGL()
    glBindVertexArray(vao);
    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
+
 
 void RenderWidget::mousePressEvent(QMouseEvent *event)
 {
