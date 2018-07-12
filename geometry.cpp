@@ -67,11 +67,19 @@ void RenderWidget::initializeGL()
 
    compileShaders();
 
+   // create a shader buffer to store generated triangles
    glGenBuffers(1, &ssbo);
    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
-   glBufferData(GL_SHADER_STORAGE_BUFFER, 12*sizeof(float), NULL, GL_STATIC_DRAW);
+   glBufferData(GL_SHADER_STORAGE_BUFFER, 1000/*FIXME*/*sizeof(float), NULL, GL_STATIC_DRAW);
    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo);
 
+   // create a buffer for an atomic uint (the number of generated triangles)
+   glGenBuffers(1, &atomic);
+   glBindBuffer(GL_SHADER_STORAGE_BUFFER, atomic);
+   glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint), NULL, GL_STATIC_COPY/*FIXME?*/);
+   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, atomic);
+
+   // create a VAO for drawing, bind the SSBO holding vertices
    glGenVertexArrays(1, &vao);
    glBindVertexArray(vao);
    glEnableVertexAttribArray(0);
@@ -92,29 +100,24 @@ void RenderWidget::paintGL()
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glPolygonMode(GL_FRONT_AND_BACK, /*wireframe*/0 ? GL_LINE : GL_FILL);
 
+   // reset the atomic counter
+   GLuint num_triangles = 0;
+   glBindBuffer(GL_SHADER_STORAGE_BUFFER, atomic);
+   glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &num_triangles);
+
+   // launch the compute shader
    progCompute.use();
-   glDispatchCompute(1, 1, 1);
+   glDispatchCompute(20, 1, 1);
    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
+   // read the number of triangles generated
+   glBindBuffer(GL_SHADER_STORAGE_BUFFER, atomic);
+   glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &num_triangles);
+
+   // draw vertices generated into the buffer
    progMesh.use();
    glBindVertexArray(vao);
-   glDrawArrays(GL_TRIANGLES, 0, 3);
-
-
-/*   glUniform2f(progCompute.uniform("center"), panX, panY);
-   glUniform1f(progCompute.uniform("scale"), scale);
-
-   glBindImageTexture(0, tex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-
-   int lsize[3];
-   progCompute.localSize(lsize);
-
-   int ngroups[3];
-   ngroups[0] = (texSize.width() + lsize[0]-1) / lsize[0];
-   ngroups[1] = (texSize.height() + lsize[1]-1) / lsize[1];
-   ngroups[2] = 1;
-
-   glDispatchCompute(ngroups[0], ngroups[1], ngroups[2]);*/
+   glDrawArrays(GL_TRIANGLES, 0, 3*num_triangles);
 }
 
 
