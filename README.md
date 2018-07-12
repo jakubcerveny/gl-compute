@@ -23,7 +23,7 @@ $ ./gl-compute
 
 ### Troubleshooting
 
-Check what OpenGL versions your Linux systems supports:
+Check what OpenGL versions your Linux system supports:
 ```
 $ glxinfo | grep version
 server glx version string: 1.4

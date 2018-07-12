@@ -8,8 +8,6 @@
 #include <QGLWidget>
 #include <QSize>
 
-#include <glm/fwd.hpp>
-
 #include "shader.hpp"
 
 
