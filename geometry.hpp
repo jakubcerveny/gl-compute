@@ -23,10 +23,9 @@ public:
 protected:
 
    Program progMesh, progCompute;
-   GLuint vao, vbo;
+   GLuint vao, ssbo;
 
    void compileShaders();
-   void createTexture(QSize size);
 
    virtual void initializeGL();
    virtual void resizeGL(int width, int height);

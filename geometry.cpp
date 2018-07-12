@@ -35,6 +35,7 @@ RenderWidget::~RenderWidget()
 }
 
 
+#include "shaders/isosurface.glsl.hpp"
 #include "shaders/palette.glsl.hpp"
 #include "shaders/mesh.glsl.hpp"
 
@@ -46,8 +47,8 @@ void RenderWidget::compileShaders()
        VertexShader(version, {shaders::palette, shaders::mesh}),
        FragmentShader(version, {shaders::palette, shaders::mesh}));
 
-   /*progCompute.link(
-       ComputeShader(version, {shaders::palette, shaders::mandelbrot}));*/
+   progCompute.link(
+       ComputeShader(version, {shaders::isosurface}));
 }
 
 void RenderWidget::initializeGL()
@@ -66,21 +67,16 @@ void RenderWidget::initializeGL()
 
    compileShaders();
 
-   const float points[] = {
-      0.0f,  0.5f,  0.0f,
-      0.5f, -0.5f,  0.0f,
-     -0.5f, -0.5f,  0.0f
-   };
-
-   glGenBuffers(1, &vbo);
-   glBindBuffer(GL_ARRAY_BUFFER, vbo);
-   glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(float), points, GL_STATIC_DRAW);
+   glGenBuffers(1, &ssbo);
+   glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+   glBufferData(GL_SHADER_STORAGE_BUFFER, 12*sizeof(float), NULL, GL_STATIC_DRAW);
+   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo);
 
    glGenVertexArrays(1, &vao);
    glBindVertexArray(vao);
    glEnableVertexAttribArray(0);
-   glBindBuffer(GL_ARRAY_BUFFER, vbo);
-   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+   glBindBuffer(GL_ARRAY_BUFFER, ssbo);
+   glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, NULL);
 }
 
 void RenderWidget::resizeGL(int width, int height)
@@ -90,36 +86,22 @@ void RenderWidget::resizeGL(int width, int height)
    aspect = (double) width / height;
 }
 
-void RenderWidget::createTexture(QSize size)
-{
-/*   if (tex) {
-      glDeleteTextures(1, &tex);
-   }
-
-   glGenTextures(1, &tex);
-   glBindTexture(GL_TEXTURE_2D, tex);
-
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, size.width(), size.height(),
-                0, GL_RGBA, GL_FLOAT, NULL);
-*/
-}
-
 void RenderWidget::paintGL()
 {
    glClearColor(1, 1, 1, 1);
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glPolygonMode(GL_FRONT_AND_BACK, /*wireframe*/0 ? GL_LINE : GL_FILL);
 
+   progCompute.use();
+   glDispatchCompute(1, 1, 1);
+   glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
    progMesh.use();
    glBindVertexArray(vao);
    glDrawArrays(GL_TRIANGLES, 0, 3);
 
-/*   progCompute.use();
 
-   glUniform2f(progCompute.uniform("center"), panX, panY);
+/*   glUniform2f(progCompute.uniform("center"), panX, panY);
    glUniform1f(progCompute.uniform("scale"), scale);
 
    glBindImageTexture(0, tex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
@@ -132,20 +114,7 @@ void RenderWidget::paintGL()
    ngroups[1] = (texSize.height() + lsize[1]-1) / lsize[1];
    ngroups[2] = 1;
 
-   glDispatchCompute(ngroups[0], ngroups[1], ngroups[2]);
-
-   // prevent sampling before all writes to texture are done
-   glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-   // display the output of the compute shader
-   progQuad.use();
-
-   glUniform1i(progQuad.uniform("sampler"), 0);
-   glActiveTexture(GL_TEXTURE0);
-   glBindTexture(GL_TEXTURE_2D, tex);
-
-   glBindVertexArray(vao);
-   glDrawArrays(GL_TRIANGLE_FAN, 0, 4);*/
+   glDispatchCompute(ngroups[0], ngroups[1], ngroups[2]);*/
 }
 
 
