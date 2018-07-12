@@ -4,17 +4,14 @@
 #include <cmath>
 #include <vector>
 
+#include <QApplication>
 #include <QString>
 
 /*#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>*/
 
-#include "render.hpp"
-
-#include "shaders/quad.glsl.hpp"
-#include "shaders/palette.glsl.hpp"
-#include "shaders/mandelbrot.glsl.hpp"
+#include "mandelbrot.hpp"
 
 const double PanSpeed = 0.005;
 const double RotateSpeed = 0.4;
@@ -37,6 +34,11 @@ RenderWidget::RenderWidget(const QGLFormat &format)
 RenderWidget::~RenderWidget()
 {
 }
+
+
+#include "shaders/quad.glsl.hpp"
+#include "shaders/palette.glsl.hpp"
+#include "shaders/mandelbrot.glsl.hpp"
 
 void RenderWidget::compileShaders()
 {
@@ -207,3 +209,30 @@ void RenderWidget::keyPressEvent(QKeyEvent * event)
    updateGL();
 }
 
+
+MainWindow::MainWindow(QWidget* gl)
+{
+    setCentralWidget(gl);
+    setWindowTitle("gl-compute");
+}
+
+int main(int argc, char *argv[])
+{
+    QApplication app(argc, argv);
+
+    QGLFormat glf = QGLFormat::defaultFormat();
+    /*glf.setSampleBuffers(true);
+    glf.setSamples(8);*/
+
+    RenderWidget* gl =
+         new RenderWidget(glf);
+
+    MainWindow wnd(gl);
+    gl->setParent(&wnd);
+
+    QSize size(1200, 1000);
+    wnd.resize(size);
+    wnd.show();
+
+    return app.exec();
+}

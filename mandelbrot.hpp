@@ -1,5 +1,5 @@
-#ifndef gl_compute_render_hpp_included__
-#define gl_compute_render_hpp_included__
+#ifndef gl_compute_mandelbrot_hpp_included__
+#define gl_compute_mandelbrot_hpp_included__
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -7,8 +7,6 @@
 #include <QtGui>
 #include <QGLWidget>
 #include <QSize>
-
-#include <glm/fwd.hpp>
 
 #include "shader.hpp"
 
@@ -28,7 +26,6 @@ protected:
    GLuint vao, tex;
 
    void compileShaders();
-   //void shapeInit(const Program &prog);
    void createTexture(QSize size);
 
    virtual void initializeGL();
@@ -51,4 +48,12 @@ protected:
 };
 
 
-#endif // gl_compute_render_hpp_included__
+class MainWindow : public QMainWindow
+{
+    Q_OBJECT
+public:
+    MainWindow(QWidget* gl);
+};
+
+
+#endif // gl_compute_mandelbrot_hpp_included__
