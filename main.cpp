@@ -15,11 +15,6 @@ MainWindow::MainWindow(QWidget* gl)
 
 int main(int argc, char *argv[])
 {
-    /*if (argc < 2) {
-        std::cout << "Usage: gl-compute <mesh> <solution>\n";
-        return EXIT_FAILURE;
-    }*/
-
     QApplication app(argc, argv);
 
     QGLFormat glf = QGLFormat::defaultFormat();
