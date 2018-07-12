@@ -4,17 +4,14 @@
 #include <cmath>
 #include <vector>
 
+#include <QApplication>
 #include <QString>
 
 /*#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>*/
 
-#include "render.hpp"
-
-#include "shaders/quad.glsl.hpp"
-#include "shaders/compute.glsl.hpp"
-#include "shaders/palette.glsl.hpp"
+#include "mandelbrot.hpp"
 
 const double PanSpeed = 0.005;
 const double RotateSpeed = 0.4;
@@ -38,6 +35,11 @@ RenderWidget::~RenderWidget()
 {
 }
 
+
+#include "shaders/quad.glsl.hpp"
+#include "shaders/palette.glsl.hpp"
+#include "shaders/mandelbrot.glsl.hpp"
+
 void RenderWidget::compileShaders()
 {
    const int version = 430;
@@ -47,7 +49,7 @@ void RenderWidget::compileShaders()
        FragmentShader(version, {shaders::quad}));
 
    progCompute.link(
-       ComputeShader(version, {shaders::palette, shaders::compute}));
+       ComputeShader(version, {shaders::palette, shaders::mandelbrot}));
 
 }
 
@@ -96,7 +98,6 @@ void RenderWidget::createTexture(QSize size)
 
    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, size.width(), size.height(),
                 0, GL_RGBA, GL_FLOAT, NULL);
-
 }
 
 void RenderWidget::paintGL()
@@ -114,7 +115,7 @@ void RenderWidget::paintGL()
    glBindImageTexture(0, tex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
    int lsize[3];
-   progCompute.computeLocalSize(lsize);
+   progCompute.localSize(lsize);
 
    int ngroups[3];
    ngroups[0] = (texSize.width() + lsize[0]-1) / lsize[0];
@@ -207,3 +208,30 @@ void RenderWidget::keyPressEvent(QKeyEvent * event)
    updateGL();
 }
 
+
+MainWindow::MainWindow(QWidget* gl)
+{
+    setCentralWidget(gl);
+    setWindowTitle("mandelbrot");
+}
+
+int main(int argc, char *argv[])
+{
+    QApplication app(argc, argv);
+
+    QGLFormat glf = QGLFormat::defaultFormat();
+    /*glf.setSampleBuffers(true);
+    glf.setSamples(8);*/
+
+    RenderWidget* gl =
+         new RenderWidget(glf);
+
+    MainWindow wnd(gl);
+    gl->setParent(&wnd);
+
+    QSize size(1200, 900);
+    wnd.resize(size);
+    wnd.show();
+
+    return app.exec();
+}

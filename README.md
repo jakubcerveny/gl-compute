@@ -15,10 +15,10 @@ $ sudo apt install cmake libqt4-dev
 
 Configure, compile and run:
 ```
-$ cd gl-compute; mkdir build; cd build
+$ mkdir build; cd build
 $ cmake ..
 $ make
-$ ./gl-compute
+$ ./mandelbrot
 ```
 
 ### Troubleshooting
@@ -42,7 +42,7 @@ OpenGL ES profile shading language version string: OpenGL ES GLSL ES 3.20
 ```
 
 On some systems, OpenGL 4.3 may not be enabled by default. Try running
-the program with the following environment variable:
+with the following environment variable:
 ```
-$ MESA_GL_VERSION_OVERRIDE=4.3 ./gl-compute
+$ MESA_GL_VERSION_OVERRIDE=4.3 ./mandelbrot
 ```

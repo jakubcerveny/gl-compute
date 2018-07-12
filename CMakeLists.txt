@@ -33,31 +33,46 @@ include_directories(${OPENGL_INCLUDE_DIR})
 
 #include_directories(${MFEM_PATH})
 
-set(gl-compute_SOURCES
-    render.cpp render.hpp
-    main.cpp main.hpp
-    shader.hpp
+
+#### mandelbrot ####
+
+set(mandelbrot_SOURCES
+    mandelbrot.cpp mandelbrot.hpp shader.hpp
+)
+set(mandelbrot_MOC_HEADERS
+    mandelbrot.hpp
+)
+qt4_wrap_cpp(mandelbrot_MOC_FILES ${mandelbrot_MOC_HEADERS})
+
+file_to_cpp(mandelbrot_DATA shaders::quad shaders/quad.glsl)
+file_to_cpp(mandelbrot_DATA shaders::palette shaders/palette.glsl)
+file_to_cpp(mandelbrot_DATA shaders::mandelbrot shaders/mandelbrot.glsl)
+
+add_executable(mandelbrot
+    ${mandelbrot_SOURCES} ${mandelbrot_MOC_FILES} ${mandelbrot_DATA}
+)
+target_link_libraries(mandelbrot
+    ${QT_LIBRARIES} ${OPENGL_LIBRARIES}
 )
 
-set(gl-compute_MOC_HEADERS
-    main.hpp
-    render.hpp
+
+#### geometry ####
+
+set(geometry_SOURCES
+    geometry.cpp geometry.hpp shader.hpp
 )
-
-qt4_wrap_cpp(gl-compute_MOC_FILES ${gl-compute_MOC_HEADERS})
-
-file_to_cpp(gl-compute_DATA shaders::quad shaders/quad.glsl)
-file_to_cpp(gl-compute_DATA shaders::compute shaders/compute.glsl)
-file_to_cpp(gl-compute_DATA shaders::palette shaders/palette.glsl)
-
-add_executable(gl-compute
-    ${gl-compute_SOURCES}
-    ${gl-compute_MOC_FILES}
-    ${gl-compute_DATA}
+set(geometry_MOC_HEADERS
+    geometry.hpp
 )
+qt4_wrap_cpp(geometry_MOC_FILES ${geometry_MOC_HEADERS})
 
-target_link_libraries(gl-compute
-    ${QT_LIBRARIES}
-    ${OPENGL_LIBRARIES}
-#    ${MFEM_PATH}/libmfem.a
+file_to_cpp(geometry_DATA shaders::isosurface shaders/isosurface.glsl)
+file_to_cpp(geometry_DATA shaders::palette shaders/palette.glsl)
+file_to_cpp(geometry_DATA shaders::mesh shaders/mesh.glsl)
+
+add_executable(geometry
+    ${geometry_SOURCES} ${geometry_MOC_FILES} ${geometry_DATA}
+)
+target_link_libraries(geometry
+    ${QT_LIBRARIES} ${OPENGL_LIBRARIES}
 )
