@@ -11,7 +11,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>*/
 
-#include "mandelbrot.hpp"
+#include "geometry.hpp"
 
 const double PanSpeed = 0.005;
 const double RotateSpeed = 0.4;
@@ -36,21 +36,19 @@ RenderWidget::~RenderWidget()
 }
 
 
-#include "shaders/quad.glsl.hpp"
 #include "shaders/palette.glsl.hpp"
-#include "shaders/mandelbrot.glsl.hpp"
+#include "shaders/mesh.glsl.hpp"
 
 void RenderWidget::compileShaders()
 {
    const int version = 430;
 
-   progQuad.link(
-       VertexShader(version, {shaders::quad}),
-       FragmentShader(version, {shaders::quad}));
+   progMesh.link(
+       VertexShader(version, {shaders::palette, shaders::mesh}),
+       FragmentShader(version, {shaders::palette, shaders::mesh}));
 
-   progCompute.link(
-       ComputeShader(version, {shaders::palette, shaders::mandelbrot}));
-
+   /*progCompute.link(
+       ComputeShader(version, {shaders::palette, shaders::mandelbrot}));*/
 }
 
 void RenderWidget::initializeGL()
@@ -74,11 +72,6 @@ void RenderWidget::initializeGL()
 
 void RenderWidget::resizeGL(int width, int height)
 {
-   if (curSize == QSize(-1, -1)) {
-      panX = width * 0.75;
-      panY = height * 0.5;
-      scale = 2.0 / height;
-   }
    glViewport(0, 0, width, height);
    curSize = QSize(width, height);
    aspect = (double) width / height;
@@ -86,7 +79,7 @@ void RenderWidget::resizeGL(int width, int height)
 
 void RenderWidget::createTexture(QSize size)
 {
-   if (tex) {
+/*   if (tex) {
       glDeleteTextures(1, &tex);
    }
 
@@ -98,16 +91,16 @@ void RenderWidget::createTexture(QSize size)
 
    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, size.width(), size.height(),
                 0, GL_RGBA, GL_FLOAT, NULL);
+*/
 }
 
 void RenderWidget::paintGL()
 {
-   if (curSize != texSize) {
-      createTexture(curSize);
-      texSize = curSize;
-   }
+   glClearColor(1, 1, 1, 1);
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   glPolygonMode(GL_FRONT_AND_BACK, /*wireframe*/0 ? GL_LINE : GL_FILL);
 
-   progCompute.use();
+/*   progCompute.use();
 
    glUniform2f(progCompute.uniform("center"), panX, panY);
    glUniform1f(progCompute.uniform("scale"), scale);
@@ -135,25 +128,13 @@ void RenderWidget::paintGL()
    glBindTexture(GL_TEXTURE_2D, tex);
 
    glBindVertexArray(vao);
-   glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+   glDrawArrays(GL_TRIANGLE_FAN, 0, 4);*/
 }
 
 
 void RenderWidget::mousePressEvent(QMouseEvent *event)
 {
    lastPos = event->pos();
-   centerPos = QPoint(lastPos.x(), curSize.height() - lastPos.y());
-}
-
-void RenderWidget::zoom(double delta)
-{
-   double cx = scale*(centerPos.x() - panX);
-   double cy = scale*(centerPos.y() - panY);
-
-   scale *= pow(1.01, delta);
-
-   panX = (scale*centerPos.x() - cx) / scale;
-   panY = (scale*centerPos.y() - cy) / scale;
 }
 
 void RenderWidget::mouseMoveEvent(QMouseEvent *event)
@@ -166,7 +147,6 @@ void RenderWidget::mouseMoveEvent(QMouseEvent *event)
 
    if (event->buttons() & Qt::RightButton)
    {
-      zoom(deltaY/2);
    }
    else if (event->buttons() & Qt::LeftButton)
    {
@@ -180,8 +160,7 @@ void RenderWidget::mouseMoveEvent(QMouseEvent *event)
 
 void RenderWidget::wheelEvent(QWheelEvent *event)
 {
-   centerPos = QPoint(event->x(), curSize.height() - event->y());
-   zoom(-double(event->delta()) / 10);
+   //zoom(-double(event->delta()) / 10);
    updateGL();
 }
 
@@ -212,7 +191,7 @@ void RenderWidget::keyPressEvent(QKeyEvent * event)
 MainWindow::MainWindow(QWidget* gl)
 {
     setCentralWidget(gl);
-    setWindowTitle("mandelbrot");
+    setWindowTitle("geometry");
 }
 
 int main(int argc, char *argv[])

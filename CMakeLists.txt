@@ -33,16 +33,15 @@ include_directories(${OPENGL_INCLUDE_DIR})
 
 #include_directories(${MFEM_PATH})
 
-### mandelbrot ###
+
+#### mandelbrot ####
 
 set(mandelbrot_SOURCES
     mandelbrot.cpp mandelbrot.hpp shader.hpp
 )
-
 set(mandelbrot_MOC_HEADERS
     mandelbrot.hpp
 )
-
 qt4_wrap_cpp(mandelbrot_MOC_FILES ${mandelbrot_MOC_HEADERS})
 
 file_to_cpp(mandelbrot_DATA shaders::quad shaders/quad.glsl)
@@ -50,12 +49,29 @@ file_to_cpp(mandelbrot_DATA shaders::palette shaders/palette.glsl)
 file_to_cpp(mandelbrot_DATA shaders::mandelbrot shaders/mandelbrot.glsl)
 
 add_executable(mandelbrot
-    ${mandelbrot_SOURCES}
-    ${mandelbrot_MOC_FILES}
-    ${mandelbrot_DATA}
+    ${mandelbrot_SOURCES} ${mandelbrot_MOC_FILES} ${mandelbrot_DATA}
+)
+target_link_libraries(mandelbrot
+    ${QT_LIBRARIES} ${OPENGL_LIBRARIES}
 )
 
-target_link_libraries(mandelbrot
-    ${QT_LIBRARIES}
-    ${OPENGL_LIBRARIES}
+
+#### geometry ####
+
+set(geometry_SOURCES
+    geometry.cpp geometry.hpp shader.hpp
+)
+set(geometry_MOC_HEADERS
+    geometry.hpp
+)
+qt4_wrap_cpp(geometry_MOC_FILES ${geometry_MOC_HEADERS})
+
+file_to_cpp(geometry_DATA shaders::palette shaders/palette.glsl)
+file_to_cpp(geometry_DATA shaders::mesh shaders/mesh.glsl)
+
+add_executable(geometry
+    ${geometry_SOURCES} ${geometry_MOC_FILES} ${geometry_DATA}
+)
+target_link_libraries(geometry
+    ${QT_LIBRARIES} ${OPENGL_LIBRARIES}
 )
