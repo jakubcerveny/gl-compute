@@ -23,7 +23,7 @@ public:
 protected:
 
    Program progMesh, progCompute;
-   GLuint vao, tex;
+   GLuint vao, vbo;
 
    void compileShaders();
    void createTexture(QSize size);

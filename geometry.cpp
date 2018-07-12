@@ -21,7 +21,6 @@ RenderWidget::RenderWidget(const QGLFormat &format)
 
   : QGLWidget(format, (QWidget*) 0)
 
-  , tex(0)
   , curSize(-1, -1)
   , texSize(-1, -1)
 
@@ -67,7 +66,21 @@ void RenderWidget::initializeGL()
 
    compileShaders();
 
-   glGenVertexArrays(1, &vao); // create an empty VAO
+   const float points[] = {
+      0.0f,  0.5f,  0.0f,
+      0.5f, -0.5f,  0.0f,
+     -0.5f, -0.5f,  0.0f
+   };
+
+   glGenBuffers(1, &vbo);
+   glBindBuffer(GL_ARRAY_BUFFER, vbo);
+   glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(float), points, GL_STATIC_DRAW);
+
+   glGenVertexArrays(1, &vao);
+   glBindVertexArray(vao);
+   glEnableVertexAttribArray(0);
+   glBindBuffer(GL_ARRAY_BUFFER, vbo);
+   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 }
 
 void RenderWidget::resizeGL(int width, int height)
@@ -99,6 +112,10 @@ void RenderWidget::paintGL()
    glClearColor(1, 1, 1, 1);
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glPolygonMode(GL_FRONT_AND_BACK, /*wireframe*/0 ? GL_LINE : GL_FILL);
+
+   progMesh.use();
+   glBindVertexArray(vao);
+   glDrawArrays(GL_TRIANGLES, 0, 3);
 
 /*   progCompute.use();
 
