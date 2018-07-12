@@ -371,7 +371,8 @@ public:
       return glGetAttribLocation(get(), name.c_str());
    }
 
-   void computeLocalSize(GLint lsize[3]) {
+   /// Return local work group size of a compute shader.
+   void localSize(GLint lsize[3]) {
       glGetProgramiv(get(), GL_COMPUTE_WORK_GROUP_SIZE, lsize);
    }
 

@@ -116,7 +116,7 @@ void RenderWidget::paintGL()
    glBindImageTexture(0, tex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
    int lsize[3];
-   progCompute.computeLocalSize(lsize);
+   progCompute.localSize(lsize);
 
    int ngroups[3];
    ngroups[0] = (texSize.width() + lsize[0]-1) / lsize[0];
@@ -213,7 +213,7 @@ void RenderWidget::keyPressEvent(QKeyEvent * event)
 MainWindow::MainWindow(QWidget* gl)
 {
     setCentralWidget(gl);
-    setWindowTitle("gl-compute");
+    setWindowTitle("mandelbrot");
 }
 
 int main(int argc, char *argv[])
