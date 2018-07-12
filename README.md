@@ -23,7 +23,7 @@ $ ./gl-compute
 
 ### Troubleshooting
 
-Check what OpenGL versions your Linux systems supports:
+Check what OpenGL versions your Linux system supports:
 ```
 $ glxinfo | grep version
 server glx version string: 1.4
@@ -42,7 +42,7 @@ OpenGL ES profile shading language version string: OpenGL ES GLSL ES 3.20
 ```
 
 On some systems, OpenGL 4.3 may not be enabled by default. Try running
-the program with the following environment variable:
+with the following environment variable:
 ```
 $ MESA_GL_VERSION_OVERRIDE=4.3 ./gl-compute
 ```

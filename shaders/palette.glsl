@@ -1,4 +1,3 @@
-#line 2
 const int RGB_Palette_3_Size = 65;
 
 const vec3 RGB_Palette_3[RGB_Palette_3_Size] =
