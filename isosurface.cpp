@@ -23,15 +23,11 @@ RenderWidget::RenderWidget(const QGLFormat &format)
   , curSize(-1, -1)
   , texSize(-1, -1)
 
-  , scale(0.5)
+  , scale(0.3)
   , rotateX(0.), rotateY(0.)
   , isoValue(0.5)
 {
    grabKeyboard();
-}
-
-RenderWidget::~RenderWidget()
-{
 }
 
 #include "shaders/isosurface.glsl.hpp"
@@ -59,10 +55,10 @@ void RenderWidget::initializeGL()
    glGetIntegerv(GL_MAJOR_VERSION, &major);
    glGetIntegerv(GL_MINOR_VERSION, &minor);
 
-/*   if (major*10 + minor < 43) {
+   if (major*10 + minor < 43) {
       throw std::runtime_error(
          "OpenGL version 4.3 or higher is required to run this program.");
-   }*/
+   }
 
    compileShaders();
 
@@ -110,7 +106,7 @@ void RenderWidget::updateIsosurface()
    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &vertCount);
 
    progCompute.use();
-   const int num_voxels = 20;
+   const int num_voxels = 24;
    glUniform1f(progCompute.uniform("voxel_size"), 2.0 / num_voxels);
    glUniform1f(progCompute.uniform("iso_value"), isoValue);
 
@@ -121,6 +117,8 @@ void RenderWidget::updateIsosurface()
    // read the number of vertices generated
    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboCount);
    glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &vertCount);
+
+   std::cout << vertCount/3 << " triangles generated." << std::endl;
 }
 
 void RenderWidget::resizeGL(int width, int height)

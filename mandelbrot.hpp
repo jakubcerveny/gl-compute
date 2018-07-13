@@ -18,7 +18,7 @@ class RenderWidget : public QGLWidget
 public:
    RenderWidget(const QGLFormat &format);
 
-   virtual ~RenderWidget();
+   virtual ~RenderWidget() {}
 
 protected:
 

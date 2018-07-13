@@ -31,11 +31,6 @@ RenderWidget::RenderWidget(const QGLFormat &format)
    grabKeyboard();
 }
 
-RenderWidget::~RenderWidget()
-{
-}
-
-
 #include "shaders/quad.glsl.hpp"
 #include "shaders/palette.glsl.hpp"
 #include "shaders/mandelbrot.glsl.hpp"
@@ -74,7 +69,8 @@ void RenderWidget::initializeGL()
 
 void RenderWidget::resizeGL(int width, int height)
 {
-   if (curSize == QSize(-1, -1)) {
+   if (curSize == QSize(-1, -1))
+   {
       panX = width * 0.75;
       panY = height * 0.5;
       scale = 2.0 / height;
