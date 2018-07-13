@@ -7,16 +7,13 @@
 #include <QApplication>
 #include <QString>
 
-/*#include <glm/glm.hpp>
+#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>*/
+#include <glm/gtc/type_ptr.hpp>
 
 #include "geometry.hpp"
 
 #include "tables.hpp"
-
-const double PanSpeed = 0.005;
-const double RotateSpeed = 0.4;
 
 
 RenderWidget::RenderWidget(const QGLFormat &format)
@@ -26,8 +23,8 @@ RenderWidget::RenderWidget(const QGLFormat &format)
   , curSize(-1, -1)
   , texSize(-1, -1)
 
-  , scale(0.)
-  , panX(0.), panY(0.)
+  , scale(0.5)
+  , rotateX(0.), rotateY(0.)
 {
    grabKeyboard();
 }
@@ -35,7 +32,6 @@ RenderWidget::RenderWidget(const QGLFormat &format)
 RenderWidget::~RenderWidget()
 {
 }
-
 
 #include "shaders/isosurface.glsl.hpp"
 #include "shaders/palette.glsl.hpp"
@@ -69,6 +65,14 @@ void RenderWidget::initializeGL()
 
    compileShaders();
 
+   // adjust the tables
+   for (int i = 0, j; i < 256; i++)
+   {
+      for (j = 0; mcTables.triTable[i][j] != -1; j++) {}
+      // store vertex count
+      mcTables.triTable[i][15] = j;
+   }
+
    // create a shader buffer to store generated triangles
    glGenBuffers(1, &ssboTri);
    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboTri);
@@ -93,6 +97,7 @@ void RenderWidget::initializeGL()
    glEnableVertexAttribArray(0);
    glBindBuffer(GL_ARRAY_BUFFER, ssboTri);
    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, NULL);
+
 }
 
 void RenderWidget::resizeGL(int width, int height)
@@ -109,23 +114,36 @@ void RenderWidget::paintGL()
    glPolygonMode(GL_FRONT_AND_BACK, /*wireframe*/1 ? GL_LINE : GL_FILL);
 
    // reset the atomic counter
-   GLuint num_triangles = 0;
+   GLuint total_vertices = 0;
    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboCount);
-   glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &num_triangles);
+   glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &total_vertices);
+
+   progCompute.use();
+   const int num_voxels = 20;
+   glUniform1f(progCompute.uniform("voxel_size"), 2.0 / num_voxels);
 
    // launch the compute shader
-   progCompute.use();
-   glDispatchCompute(20, 1, 1);
+   glDispatchCompute(num_voxels, num_voxels, num_voxels);
    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
    // read the number of triangles generated
    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboCount);
-   glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &num_triangles);
+   glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &total_vertices);
+
+   // setup the model-view-projection transform
+   glm::mat4 proj = glm::perspective(glm::radians(45.0), aspect, 0.001, 100.0);
+   glm::mat4 view(1.0);
+   view = glm::translate(view, glm::vec3(0, 0, -1));
+   view = glm::scale(view, glm::vec3(scale, scale, scale));
+   view = glm::rotate(view, glm::radians(rotateX), glm::vec3(1, 0, 0));
+   view = glm::rotate(view, glm::radians(rotateY), glm::vec3(0, 1, 0));
+   glm::mat4 MVP = proj * view;
 
    // draw vertices generated into the buffer
    progMesh.use();
+   glUniformMatrix4fv(progMesh.uniform("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
    glBindVertexArray(vao);
-   glDrawArrays(GL_TRIANGLES, 0, 3*num_triangles);
+   glDrawArrays(GL_TRIANGLES, 0, total_vertices);
 }
 
 
@@ -144,11 +162,13 @@ void RenderWidget::mouseMoveEvent(QMouseEvent *event)
 
    if (event->buttons() & Qt::RightButton)
    {
+      scale -= 0.002 * deltaY;
+      scale = std::max(scale, 0.0001f);
    }
    else if (event->buttons() & Qt::LeftButton)
    {
-      panX += deltaX;
-      panY -= deltaY;
+      rotateX += deltaY;
+      rotateY += deltaX;
    }
 
    lastPos = event->pos();

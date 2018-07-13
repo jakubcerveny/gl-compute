@@ -40,8 +40,8 @@ protected:
    double aspect;
    QPoint lastPos;
 
-   double scale;
-   double panX, panY;
+   float scale;
+   float rotateX, rotateY;
 };
 
 

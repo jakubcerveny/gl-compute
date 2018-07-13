@@ -26,10 +26,7 @@ find_package(OpenGL 4.3 REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})
 
 # OpenGL Math (GLM)
-#find_package(GLM REQUIRED)
-
-#find_package(Eigen3 3.2 REQUIRED)
-#include_directories(${EIGEN3_INCLUDE_DIR})
+find_package(GLM REQUIRED)
 
 #include_directories(${MFEM_PATH})
 
