@@ -53,23 +53,23 @@ target_link_libraries(mandelbrot
 )
 
 
-#### geometry ####
+#### isosurface ####
 
-set(geometry_SOURCES
-    geometry.cpp geometry.hpp shader.hpp
+set(isosurface_SOURCES
+    isosurface.cpp isosurface.hpp shader.hpp
 )
-set(geometry_MOC_HEADERS
-    geometry.hpp
+set(isosurface_MOC_HEADERS
+    isosurface.hpp
 )
-qt4_wrap_cpp(geometry_MOC_FILES ${geometry_MOC_HEADERS})
+qt4_wrap_cpp(isosurface_MOC_FILES ${isosurface_MOC_HEADERS})
 
-file_to_cpp(geometry_DATA shaders::isosurface shaders/isosurface.glsl)
-file_to_cpp(geometry_DATA shaders::palette shaders/palette.glsl)
-file_to_cpp(geometry_DATA shaders::mesh shaders/mesh.glsl)
+file_to_cpp(isosurface_DATA shaders::isosurface shaders/isosurface.glsl)
+file_to_cpp(isosurface_DATA shaders::palette shaders/palette.glsl)
+file_to_cpp(isosurface_DATA shaders::mesh shaders/mesh.glsl)
 
-add_executable(geometry
-    ${geometry_SOURCES} ${geometry_MOC_FILES} ${geometry_DATA}
+add_executable(isosurface
+    ${isosurface_SOURCES} ${isosurface_MOC_FILES} ${isosurface_DATA}
 )
-target_link_libraries(geometry
+target_link_libraries(isosurface
     ${QT_LIBRARIES} ${OPENGL_LIBRARIES}
 )

@@ -11,7 +11,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "geometry.hpp"
+#include "isosurface.hpp"
 
 #include "tables.hpp"
 
@@ -141,7 +141,7 @@ void RenderWidget::paintGL()
    view = glm::rotate(view, glm::radians(rotateY), glm::vec3(0, 1, 0));
    glm::mat4 MVP = proj * view;
 
-   // draw vertices generated into the ssboTri
+   // draw vertices generated into the ssboVert
    progMesh.use();
    glUniformMatrix4fv(progMesh.uniform("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
    glBindVertexArray(vao);
@@ -210,7 +210,7 @@ void RenderWidget::keyPressEvent(QKeyEvent * event)
 MainWindow::MainWindow(QWidget* gl)
 {
     setCentralWidget(gl);
-    setWindowTitle("geometry");
+    setWindowTitle("isosurface");
 }
 
 int main(int argc, char *argv[])

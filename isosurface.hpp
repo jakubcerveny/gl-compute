@@ -1,5 +1,5 @@
-#ifndef gl_compute_geometry_hpp_included__
-#define gl_compute_geometry_hpp_included__
+#ifndef gl_compute_isosurface_hpp_included__
+#define gl_compute_isosurface_hpp_included__
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -54,4 +54,4 @@ public:
 };
 
 
-#endif // gl_compute_geometry_hpp_included__
+#endif // gl_compute_isosurface_hpp_included__
