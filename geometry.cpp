@@ -25,6 +25,7 @@ RenderWidget::RenderWidget(const QGLFormat &format)
 
   , scale(0.5)
   , rotateX(0.), rotateY(0.)
+  , isoValue(0.5)
 {
    grabKeyboard();
 }
@@ -73,13 +74,13 @@ void RenderWidget::initializeGL()
       mcTables.triTable[i][15] = j;
    }
 
-   // create a shader buffer to store generated triangles
-   glGenBuffers(1, &ssboTri);
-   glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboTri);
+   // create a shader buffer to store generated triangles (triples of vertices)
+   glGenBuffers(1, &ssboVert);
+   glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboVert);
    glBufferData(GL_SHADER_STORAGE_BUFFER, 12*1024*1024/*FIXME*/*sizeof(float), NULL, GL_STATIC_DRAW);
-   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssboTri);
+   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssboVert);
 
-   // buffer for an atomic uint (the number of generated triangles)
+   // buffer for an atomic uint (the number of generated vertices)
    glGenBuffers(1, &ssboCount);
    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboCount);
    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint), NULL, GL_DYNAMIC_DRAW);
@@ -95,7 +96,7 @@ void RenderWidget::initializeGL()
    glGenVertexArrays(1, &vao);
    glBindVertexArray(vao);
    glEnableVertexAttribArray(0);
-   glBindBuffer(GL_ARRAY_BUFFER, ssboTri);
+   glBindBuffer(GL_ARRAY_BUFFER, ssboVert);
    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, NULL);
 
 }
@@ -121,6 +122,7 @@ void RenderWidget::paintGL()
    progCompute.use();
    const int num_voxels = 20;
    glUniform1f(progCompute.uniform("voxel_size"), 2.0 / num_voxels);
+   glUniform1f(progCompute.uniform("iso_value"), isoValue);
 
    // launch the compute shader
    glDispatchCompute(num_voxels, num_voxels, num_voxels);
@@ -139,7 +141,7 @@ void RenderWidget::paintGL()
    view = glm::rotate(view, glm::radians(rotateY), glm::vec3(0, 1, 0));
    glm::mat4 MVP = proj * view;
 
-   // draw vertices generated into the buffer
+   // draw vertices generated into the ssboTri
    progMesh.use();
    glUniformMatrix4fv(progMesh.uniform("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
    glBindVertexArray(vao);
@@ -177,7 +179,7 @@ void RenderWidget::mouseMoveEvent(QMouseEvent *event)
 
 void RenderWidget::wheelEvent(QWheelEvent *event)
 {
-   //zoom(-double(event->delta()) / 10);
+   isoValue += (double(event->delta()) / 120) / 50;
    updateGL();
 }
 
@@ -216,8 +218,8 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
 
     QGLFormat glf = QGLFormat::defaultFormat();
-    /*glf.setSampleBuffers(true);
-    glf.setSamples(8);*/
+    glf.setSampleBuffers(true);
+    glf.setSamples(8);
 
     RenderWidget* gl =
          new RenderWidget(glf);

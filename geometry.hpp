@@ -23,7 +23,7 @@ public:
 protected:
 
    Program progMesh, progCompute;
-   GLuint vao, ssboTri, ssboCount, ssboTables;
+   GLuint vao, ssboVert, ssboCount, ssboTables;
 
    void compileShaders();
 
@@ -42,6 +42,7 @@ protected:
 
    float scale;
    float rotateX, rotateY;
+   float isoValue;
 };
 
 

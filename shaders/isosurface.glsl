@@ -2,7 +2,7 @@
 
 layout(local_size_x = 1, local_size_y = 1) in;
 
-layout(std430, binding = 0) buffer triangle_buffer
+layout(std430, binding = 0) buffer vertex_buffer
 {
     vec4 vertices[];
 };
@@ -19,6 +19,7 @@ layout(std430, binding = 2) buffer tables_buffer
 };
 
 uniform float voxel_size;
+uniform float iso_value;
 
 const uvec3 corner_ijk[8] =
 {
@@ -41,9 +42,9 @@ const float eps = 1e-5;
 
 vec3 get_vertex(float iso, vec3 p1, vec3 p2, float val1, float val2)
 {
-    /*if (abs(iso - val1) < eps) { return p1; }
+    if (abs(iso - val1) < eps) { return p1; }
     if (abs(iso - val2) < eps) { return p2; }
-    if (abs(val2 - val1) < eps) { return p1; }*/
+    if (abs(val2 - val1) < eps) { return p1; }
 
     return p1 + (iso - val1) / (val2 - val1) * (p2 - p1);
 }
@@ -52,8 +53,6 @@ float implicit_function(vec3 x)
 {
     return length(x);
 }
-
-const float iso_value = 0.5;
 
 
 void main()
@@ -134,13 +133,5 @@ void main()
     for (uint i = 0; i < nv; i++) {
         vertices[pos++] = vec4(vertex[tri_table[cube_index][i]], 1);
     }
-
-    /*vertices[pos++] = vec4(corner[0], 1);
-    vertices[pos++] = vec4(corner[1], 1);
-    vertices[pos++] = vec4(corner[2], 1);*/
-
-    /*vertices[pos++] = vec4( 0.0, 0.5, 0.0, 1);
-    vertices[pos++] = vec4( 0.5, -0.5, 0.0, 1);
-    vertices[pos++] = vec4(-0.5, -0.5, 0.0, 1);*/
 }
 
