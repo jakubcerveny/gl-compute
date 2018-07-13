@@ -59,10 +59,10 @@ void RenderWidget::initializeGL()
    glGetIntegerv(GL_MAJOR_VERSION, &major);
    glGetIntegerv(GL_MINOR_VERSION, &minor);
 
-   if (major*10 + minor < 43) {
+/*   if (major*10 + minor < 43) {
       throw std::runtime_error(
          "OpenGL version 4.3 or higher is required to run this program.");
-   }
+   }*/
 
    compileShaders();
 
@@ -99,6 +99,28 @@ void RenderWidget::initializeGL()
    glBindBuffer(GL_ARRAY_BUFFER, ssboVert);
    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, NULL);
 
+   updateIsosurface();
+}
+
+void RenderWidget::updateIsosurface()
+{
+   // reset the atomic counter
+   vertCount = 0;
+   glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboCount);
+   glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &vertCount);
+
+   progCompute.use();
+   const int num_voxels = 20;
+   glUniform1f(progCompute.uniform("voxel_size"), 2.0 / num_voxels);
+   glUniform1f(progCompute.uniform("iso_value"), isoValue);
+
+   // launch the compute shader and wait for completion
+   glDispatchCompute(num_voxels, num_voxels, num_voxels);
+   glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+   // read the number of vertices generated
+   glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboCount);
+   glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &vertCount);
 }
 
 void RenderWidget::resizeGL(int width, int height)
@@ -114,24 +136,6 @@ void RenderWidget::paintGL()
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glPolygonMode(GL_FRONT_AND_BACK, /*wireframe*/1 ? GL_LINE : GL_FILL);
 
-   // reset the atomic counter
-   GLuint total_vertices = 0;
-   glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboCount);
-   glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &total_vertices);
-
-   progCompute.use();
-   const int num_voxels = 20;
-   glUniform1f(progCompute.uniform("voxel_size"), 2.0 / num_voxels);
-   glUniform1f(progCompute.uniform("iso_value"), isoValue);
-
-   // launch the compute shader
-   glDispatchCompute(num_voxels, num_voxels, num_voxels);
-   glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-   // read the number of triangles generated
-   glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboCount);
-   glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &total_vertices);
-
    // setup the model-view-projection transform
    glm::mat4 proj = glm::perspective(glm::radians(45.0), aspect, 0.001, 100.0);
    glm::mat4 view(1.0);
@@ -145,7 +149,7 @@ void RenderWidget::paintGL()
    progMesh.use();
    glUniformMatrix4fv(progMesh.uniform("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
    glBindVertexArray(vao);
-   glDrawArrays(GL_TRIANGLES, 0, total_vertices);
+   glDrawArrays(GL_TRIANGLES, 0, vertCount);
 }
 
 
@@ -180,6 +184,7 @@ void RenderWidget::mouseMoveEvent(QMouseEvent *event)
 void RenderWidget::wheelEvent(QWheelEvent *event)
 {
    isoValue += (double(event->delta()) / 120) / 50;
+   updateIsosurface();
    updateGL();
 }
 

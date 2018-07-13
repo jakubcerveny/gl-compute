@@ -24,8 +24,10 @@ protected:
 
    Program progMesh, progCompute;
    GLuint vao, ssboVert, ssboCount, ssboTables;
+   GLuint vertCount;
 
    void compileShaders();
+   void updateIsosurface();
 
    virtual void initializeGL();
    virtual void resizeGL(int width, int height);
