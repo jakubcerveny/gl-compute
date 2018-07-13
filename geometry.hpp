@@ -23,7 +23,7 @@ public:
 protected:
 
    Program progMesh, progCompute;
-   GLuint vao, ssbo, atomic;
+   GLuint vao, ssboTri, ssboCount, ssboTables;
 
    void compileShaders();
 

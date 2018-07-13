@@ -13,6 +13,8 @@
 
 #include "geometry.hpp"
 
+#include "tables.hpp"
+
 const double PanSpeed = 0.005;
 const double RotateSpeed = 0.4;
 
@@ -68,22 +70,28 @@ void RenderWidget::initializeGL()
    compileShaders();
 
    // create a shader buffer to store generated triangles
-   glGenBuffers(1, &ssbo);
-   glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
-   glBufferData(GL_SHADER_STORAGE_BUFFER, 1000/*FIXME*/*sizeof(float), NULL, GL_STATIC_DRAW);
-   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo);
+   glGenBuffers(1, &ssboTri);
+   glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboTri);
+   glBufferData(GL_SHADER_STORAGE_BUFFER, 12*1024*1024/*FIXME*/*sizeof(float), NULL, GL_STATIC_DRAW);
+   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssboTri);
 
-   // create a buffer for an atomic uint (the number of generated triangles)
-   glGenBuffers(1, &atomic);
-   glBindBuffer(GL_SHADER_STORAGE_BUFFER, atomic);
-   glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint), NULL, GL_STATIC_COPY/*FIXME?*/);
-   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, atomic);
+   // buffer for an atomic uint (the number of generated triangles)
+   glGenBuffers(1, &ssboCount);
+   glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboCount);
+   glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint), NULL, GL_DYNAMIC_DRAW);
+   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssboCount);
+
+   // buffer for marching cubes tables
+   glGenBuffers(1, &ssboTables);
+   glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboTables);
+   glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(mcTables), &mcTables, GL_STATIC_DRAW);
+   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, ssboTables);
 
    // create a VAO for drawing, bind the SSBO holding vertices
    glGenVertexArrays(1, &vao);
    glBindVertexArray(vao);
    glEnableVertexAttribArray(0);
-   glBindBuffer(GL_ARRAY_BUFFER, ssbo);
+   glBindBuffer(GL_ARRAY_BUFFER, ssboTri);
    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, NULL);
 }
 
@@ -98,11 +106,11 @@ void RenderWidget::paintGL()
 {
    glClearColor(1, 1, 1, 1);
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   glPolygonMode(GL_FRONT_AND_BACK, /*wireframe*/0 ? GL_LINE : GL_FILL);
+   glPolygonMode(GL_FRONT_AND_BACK, /*wireframe*/1 ? GL_LINE : GL_FILL);
 
    // reset the atomic counter
    GLuint num_triangles = 0;
-   glBindBuffer(GL_SHADER_STORAGE_BUFFER, atomic);
+   glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboCount);
    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &num_triangles);
 
    // launch the compute shader
@@ -111,7 +119,7 @@ void RenderWidget::paintGL()
    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
    // read the number of triangles generated
-   glBindBuffer(GL_SHADER_STORAGE_BUFFER, atomic);
+   glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboCount);
    glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &num_triangles);
 
    // draw vertices generated into the buffer
