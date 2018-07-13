@@ -1,6 +1,6 @@
 # gl-compute
 
-A simple test of OpenGL 4.3 compute shaders.
+Simple tests of OpenGL 4.3 compute shaders.
 
 ![gl-compute](https://raw.githubusercontent.com/jakubcerveny/gl-compute/master/data/screen.png)
 
@@ -8,9 +8,9 @@ Note that you need a recent OS to run this. Ubuntu 16.04 or newer should do.
 
 ### Compiling
 
-We need CMake and Qt4:
+We need CMake, Qt4 and GLM:
 ```
-$ sudo apt install cmake libqt4-dev
+$ sudo apt install cmake libqt4-dev libglm-dev
 ```
 
 Configure, compile and run:
@@ -19,6 +19,7 @@ $ mkdir build; cd build
 $ cmake ..
 $ make
 $ ./mandelbrot
+$ ./isosurface
 ```
 
 ### Troubleshooting
